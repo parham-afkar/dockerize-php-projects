@@ -1,0 +1,148 @@
+version: '3.5'
+networks:
+  shared:
+    name: shared
+
+
+services:
+
+# nginx
+  nginx:
+    build:
+      context: ./nginx
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - APP_USER=${APP_USER}
+    container_name: ${PREFIX}_${NGINX_CONTAINER_NAME}
+    restart: always
+    volumes:
+      - ${APP_PATH}:/var/www/html
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+      - ./.data/logs-nginx/:/var/log/nginx
+      - ./nginx/ssl/:/etc/nginx/ssl/
+    ports:
+      - "${NGINX_CONTAINER_PORT_HTTP}"
+      - "${NGINX_CONTAINER_PORT_HTTPS}"
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN}
+      - NGINX_CONTAINER_PHP_UPSTREAM_NAME=${NGINX_CONTAINER_PHP_UPSTREAM_NAME}
+      - NGINX_CONTAINER_PHP_UPSTREAM_PORT=${NGINX_CONTAINER_PHP_UPSTREAM_PORT}
+      - NGINX_CONTAINER_PROJECT_PATH=${NGINX_CONTAINER_PROJECT_PATH}
+    depends_on:
+      - composer
+    networks:
+      - shared
+
+## PHP-FPM
+  php-fpm:
+    build:
+      context: ./php-fpm
+      dockerfile: ${PHP_CONTAINER_VERSION}.Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - APP_USER=${APP_USER}
+    container_name: ${PREFIX}_${PHP_CONTAINER_NAME}
+    restart: always
+    volumes:
+      - ${APP_PATH}:/var/www/html
+      - ./php-fpm/php${PHP_CONTAINER_VERSION}.ini:/usr/local/etc/php/php.ini
+    expose:
+      - ${PHP_CONTAINER_PORT}
+    environment:
+      - PHP_IDE_CONFIG=xapp_network
+    depends_on:
+      - composer
+    networks:
+      - shared
+  
+## Composer
+  composer:
+    build:
+      context: ./composer
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - APP_USER=${APP_USER}
+    container_name: ${PREFIX}_${COMPOSER_CONTAINER_NAME}
+    volumes:
+      - ${APP_PATH}:/var/www/html
+    working_dir: /var/www/html
+    user: ${APP_USER}
+    command: composer install --ignore-platform-reqs
+    networks:
+        - shared
+
+## MYSQL
+  mysql:
+      image: mariadb:${MYSQL_CONTAINER_VERSION}
+      container_name: ${PREFIX}_${MYSQL_CONTAINER_NAME}
+      restart: always
+      tty: true
+      expose:
+        - ${MYSQL_CONTAINER_PORT}
+      environment:
+        - MYSQL_DATABASE=${MYSQL_CONTAINER_DATABASE}
+        - MYSQL_USER=${MYSQL_CONTAINER_USER}
+        - MYSQL_PASSWORD=${MYSQL_CONTAINER_PASSWORD}
+        - MYSQL_ROOT_PASSWORD=${MYSQL_CONTAINER_ROOT_PASSWORD}
+      volumes:
+        - ./.data/mysql:/var/lib/mysql
+        - ./mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      networks:
+        - shared
+
+
+# PHPMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:${PHPMYADMIN_CONTAINER_VERSION}
+    container_name: ${PREFIX}_${PHPMYADMIN_CONTAINER_NAME}
+    restart: always
+    ports:
+      - ${PHPMYADMIN_CONTAINER_PORT}
+    environment:
+      - PMA_ARBITRARY=1
+      - UPLOAD_LIMIT=300M
+    networks:
+      - shared
+
+# Redis
+  redis:
+    image: redis:latest
+    container_name: ${PREFIX}_${REDIS_CONTAINER_NAME}
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_CONTAINER_PASSWORD}
+    volumes: 
+      - ./.data/redis:/data
+    networks:
+      - shared
+
+# MAILDEV
+  maildev:
+    build: ./maildev
+    container_name: ${PREFIX}_${MAILDEV_CONTAINER_NAME}
+    restart: always
+    ports:
+      - "${MAILDEV_CONTAINER_HTTP_PORT}"
+      - "${MAILDEV_CONTAINER_SMTP_PORT}"
+    networks:
+      - shared
+
+
+#MonboDB
+  mongodb:
+    image: mongo:${MONGODB_CONTAINER_VERSION}
+    container_name: ${PREFIX}_${MONGODB_CONTAINER_NAME}
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_CONTAINER_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_CONTAINER_ROOT_PASSWORD}
+    ports:
+      - ${MONGODB_CONTAINER_PORT}
+    volumes:
+      - /.data/mongodb:/data/db
+    networks:
+        - shared
