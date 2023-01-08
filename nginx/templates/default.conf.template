@@ -2,9 +2,9 @@ server {
     listen 80 default_server;
 
     # Start HTTPS Section
-    listen 443 ssl http2;
-    ssl_certificate /etc/nginx/ssl/fullchain.pem;
-    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+    #listen 443 ssl http2;
+    #ssl_certificate /etc/nginx/ssl/fullchain.pem;
+    #ssl_certificate_key /etc/nginx/ssl/privkey.pem;
     # End HTTPS Section
 
     server_name ${APP_DOMAIN};
