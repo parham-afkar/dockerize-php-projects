@@ -76,7 +76,9 @@ services:
 
 ## MYSQL
   mysql:
-      image: mariadb:${MYSQL_CONTAINER_VERSION}
+      build:
+        context: ./mysql
+        dockerfile: ${MYSQL_CONTAINER_VERSION}.Dockerfile
       container_name: ${PREFIX}_${MYSQL_CONTAINER_NAME}
       restart: always
       tty: true
