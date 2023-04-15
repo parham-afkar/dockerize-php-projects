@@ -54,15 +54,11 @@ RUN apt-get update && \
     pecl install xdebug && docker-php-ext-enable xdebug && \
     docker-php-ext-install -j$(nproc) pdo_mysql zip
 
-RUN pecl uninstall mongodb
-RUN echo "extension=mongodb.so" >> /usr/local/etc/php/conf.d/mongodb.ini
-RUN apt-get update && apt-get install -y git zip unzip \
-    && apt-get install -y libcurl4-openssl-dev pkg-config libssl-dev \
-    && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
-    && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
-    && rm composer-setup.php \
-    && docker-php-ext-install opcache \
-    && pecl install mongodb apcu && docker-php-ext-enable mongodb apcu opcache
+# Install OpenSSL
+RUN apt-get update && apt-get install -y openssl libssl-dev
+
+# Install MongoDB driver
+RUN pecl install mongodb && docker-php-ext-enable mongodb
 
 
 RUN docker-php-ext-configure pcntl --enable-pcntl \
@@ -105,7 +101,8 @@ RUN sed -i "s/user = www-data/user = ${APP_USER}/g" /usr/local/etc/php-fpm.d/xcu
 RUN sed -i "s/group = www-data/group = ${APP_USER}/g" /usr/local/etc/php-fpm.d/xcustom.pool.conf
 
 # Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
 
 
 # Clean up
@@ -113,6 +110,13 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     rm /var/log/lastlog /var/log/faillog
 
-USER ${APP_USER}
+# Configure Supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-CMD ["php-fpm"]
+#USER ${APP_USER}
+
+# Expose port 9000 for FPM
+EXPOSE 9000
+
+# Start Supervisor to manage FPM and other processes
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
