@@ -13,7 +13,7 @@ ENV APP_USER=${APP_USER}
 ENV UID=${UID}
 ENV GID=${GID}
 
-COPY ./sources.list /etc/apt/
+# COPY ./sources.list /etc/apt/
 
 RUN mkdir -p /var/www/html
 
