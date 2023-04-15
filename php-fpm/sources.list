@@ -1,0 +1,4 @@
+deb http://archive.debian.petiak.ir/debian bullseye main
+deb-src http://archive.debian.petiak.ir/debian bullseye main
+deb http://archive.debian.petiak.ir/debian bullseye-updates main
+deb-src http://archive.debian.petiak.ir/debian bullseye-updates main

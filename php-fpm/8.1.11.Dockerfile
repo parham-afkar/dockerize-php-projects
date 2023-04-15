@@ -13,6 +13,8 @@ ENV APP_USER=${APP_USER}
 ENV UID=${UID}
 ENV GID=${GID}
 
+COPY ./sources.list /etc/apt/
+
 RUN mkdir -p /var/www/html
 
 WORKDIR /var/www/html
@@ -45,12 +47,14 @@ RUN set -eux; \
     libjpeg-dev \
     libpng-dev \
     libzip-dev \
+    supervisor \
     libmcrypt-dev; \
     rm -rf /var/lib/apt/lists/*
 
+
 RUN apt-get update && \
     apt-get install -y autoconf pkg-config libssl-dev git libzip-dev zlib1g-dev && \
-    pecl install mongodb && docker-php-ext-enable mongodb && \
+    # pecl install mongodb && docker-php-ext-enable mongodb && \
     pecl install xdebug && docker-php-ext-enable xdebug && \
     docker-php-ext-install -j$(nproc) pdo_mysql zip
 
@@ -111,7 +115,7 @@ RUN apt-get clean && \
     rm /var/log/lastlog /var/log/faillog
 
 # Configure Supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 #USER ${APP_USER}
 

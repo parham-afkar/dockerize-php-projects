@@ -1,8 +1,5 @@
 FROM nginx:alpine
 
-RUN echo "http://mirror.fcix.net/alpine/latest-stable/main" > /etc/apk/repositories ; \
-    echo "http://mirror.fcix.net/alpine/latest-stable/community" >> /etc/apk/repositories
-
 LABEL maintainer="Parham Afkar"
 
 ARG UID

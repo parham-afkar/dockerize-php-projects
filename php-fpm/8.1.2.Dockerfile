@@ -13,6 +13,8 @@ ENV APP_USER=${APP_USER}
 ENV UID=${UID}
 ENV GID=${GID}
 
+COPY ./sources.list /etc/apt/
+
 RUN mkdir -p /var/www/html
 
 WORKDIR /var/www/html
@@ -45,16 +47,27 @@ RUN set -eux; \
     libjpeg-dev \
     libpng-dev \
     libzip-dev \
+    supervisor \
     libmcrypt-dev; \
     rm -rf /var/lib/apt/lists/*
 
 
 RUN apt-get update && \
     apt-get install -y autoconf pkg-config libssl-dev git libzip-dev zlib1g-dev && \
-    pecl install mongodb && docker-php-ext-enable mongodb && \
+    # pecl install mongodb && docker-php-ext-enable mongodb && \
     pecl install xdebug && docker-php-ext-enable xdebug && \
     docker-php-ext-install -j$(nproc) pdo_mysql zip
 
+# Install OpenSSL
+RUN apt-get update && apt-get install -y openssl libssl-dev
+
+# Install MongoDB driver
+RUN pecl install mongodb && docker-php-ext-enable mongodb
+
+
+RUN docker-php-ext-configure pcntl --enable-pcntl \
+    && docker-php-ext-install \
+    pcntl
 
 RUN apt-get install -y \
     zip \
@@ -83,6 +96,8 @@ RUN rm /etc/apt/preferences.d/no-debian-php && \
     docker-php-ext-install soap;
 
 
+RUN pecl install redis && docker-php-ext-enable redis
+
 COPY ./custom.ini /usr/local/etc/php/conf.d
 COPY ./xcustom.pool.conf /usr/local/etc/php-fpm.d/
 
@@ -90,7 +105,8 @@ RUN sed -i "s/user = www-data/user = ${APP_USER}/g" /usr/local/etc/php-fpm.d/xcu
 RUN sed -i "s/group = www-data/group = ${APP_USER}/g" /usr/local/etc/php-fpm.d/xcustom.pool.conf
 
 # Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
 
 
 # Clean up
@@ -98,6 +114,13 @@ RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     rm /var/log/lastlog /var/log/faillog
 
-USER ${APP_USER}
+# Configure Supervisor
+COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-CMD ["php-fpm"]
+#USER ${APP_USER}
+
+# Expose port 9000 for FPM
+EXPOSE 9000
+
+# Start Supervisor to manage FPM and other processes
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
