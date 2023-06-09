@@ -117,7 +117,7 @@ RUN apt-get clean && \
 # Configure Supervisor
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-#USER ${APP_USER}
+USER ${APP_USER}
 
 # Expose port 9000 for FPM
 EXPOSE 9000

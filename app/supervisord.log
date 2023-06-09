@@ -1,6 +1,0 @@
-2023-04-15 12:26:14,859 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
-2023-04-15 12:26:14,862 INFO supervisord started with pid 1
-2023-04-15 12:26:15,864 INFO spawned: 'laravel-fpm' with pid 7
-2023-04-15 12:26:15,866 INFO spawned: 'laravel-worker_00' with pid 8
-2023-04-15 12:26:16,911 INFO success: laravel-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
-2023-04-15 12:26:16,911 INFO success: laravel-worker_00 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
