@@ -3,6 +3,10 @@ FROM php:8.1.11-fpm
 LABEL maintainer="Parham Afkar"
 ENV DEBIAN_FRONTEND noninteractive
 
+# Set HTTP_PROXY
+ENV http_proxy=""
+ENV https_proxy=""
+
 ARG INSTALL_PHP_VERSION
 
 ARG UID
@@ -32,6 +36,7 @@ RUN set -eux; \
     git \
     curl \
     zip \
+    wget \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -48,6 +53,7 @@ RUN set -eux; \
     libpng-dev \
     libzip-dev \
     supervisor \
+    procps \
     libmcrypt-dev; \
     rm -rf /var/lib/apt/lists/*
 
@@ -55,14 +61,30 @@ RUN set -eux; \
 RUN apt-get update && \
     apt-get install -y autoconf pkg-config libssl-dev git libzip-dev zlib1g-dev && \
     # pecl install mongodb && docker-php-ext-enable mongodb && \
-    pecl install xdebug && docker-php-ext-enable xdebug && \
+    # pecl install xdebug && docker-php-ext-enable xdebug && \
     docker-php-ext-install -j$(nproc) pdo_mysql zip
 
 # Install OpenSSL
 RUN apt-get update && apt-get install -y openssl libssl-dev
 
-# Install MongoDB driver
-RUN pecl install mongodb && docker-php-ext-enable mongodb
+# Download MongoDB extension source code
+RUN curl -OL https://github.com/mongodb/mongo-php-driver/releases/download/1.16.1/mongodb-1.16.1.tgz
+
+# Extract the source code
+RUN tar -xf mongodb-1.16.1.tgz
+
+# Build and install the MongoDB extension
+RUN cd mongodb-1.16.1 \
+    && phpize \
+    && ./configure \
+    && make \
+    && make install
+
+# Enable the MongoDB extension
+RUN echo "extension=mongodb.so" > /usr/local/etc/php/conf.d/mongodb.ini
+
+# Clean up
+RUN rm -rf mongodb-1.16.1.tgz mongodb-1.16.1
 
 
 RUN docker-php-ext-configure pcntl --enable-pcntl \
@@ -96,7 +118,14 @@ RUN rm /etc/apt/preferences.d/no-debian-php && \
     docker-php-ext-install soap;
 
 
-RUN pecl install redis && docker-php-ext-enable redis
+# Download and extract Redis source code
+RUN wget http://download.redis.io/releases/redis-7.0.9.tar.gz  && tar xzf redis-7.0.9.tar.gz
+
+# Build and install Redis
+RUN cd redis-7.0.9 && make && make install
+
+# Install Redis PHP extension
+# RUN pecl install redis && docker-php-ext-enable redis
 
 COPY ./custom.ini /usr/local/etc/php/conf.d
 COPY ./xcustom.pool.conf /usr/local/etc/php-fpm.d/
@@ -117,6 +146,13 @@ RUN apt-get clean && \
 # Configure Supervisor
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+
+Remove HTTP_Proxy
+ENV http_proxy=""
+ENV https_proxy=""
+
+
+# Normal user
 USER ${APP_USER}
 
 # Expose port 9000 for FPM
@@ -124,3 +160,5 @@ EXPOSE 9000
 
 # Start Supervisor to manage FPM and other processes
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+# CMD ["php-fpm"]
