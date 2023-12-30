@@ -16,5 +16,9 @@ To do this, simply edit the `.env` file and leave the value of the `NGINX_CONTAI
 
 Additionally, if you need to change the `domain` in Nginx, you can do so by modifying the `APP_DOMAIN variable`.
 
+``Note:`` If you want to modify the file related to the Nginx virtual host, you should edit the `default.conf.template` file located in the `./nginx/templates/ directory`.
+
+`Please avoid changing the default.conf file in the ./nginx/conf.d/ path`.
+
 To run Docker, use the following command:
 `docker-compose up --build -d` OR `docker compose up --build -d`
