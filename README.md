@@ -8,5 +8,13 @@ You can use PHP versions from `7.0 to 8.2`. Please avoid from making changes to 
 
 Please be aware that if you change the `name of the php-fpm service`, you should also update the `NGINX_CONTAINER_PHP_UPSTREAM_NAME` variable in the .env file with the same name.
 
+By default, the path that the Nginx web server considers for reading the index.php file in its configuration is as follows:
+`/var/www/html/public/`
+If you are not using Laravel, you should remove `"public"`.
+
+To do this, simply edit the `.env` file and leave the value of the `NGINX_CONTAINER_PROJECT_PATH` variable `empty`.
+
+Additionally, if you need to change the `domain` in Nginx, you can do so by modifying the `APP_DOMAIN variable`.
+
 To run Docker, use the following command:
 `docker-compose up --build -d` OR `docker compose up --build -d`
