@@ -1,13 +1,12 @@
 # Dockerize PHP Projects
 
-You can run any version of Laravel
+Using this repository, you can run any version of PHP and Laravel or other frameworks.
 
-Step 1: Download Laravel or any other project source codes in to `app` directory.
+To place your source code inside the container, you just need to create a directory named `"app"` in the root path of the project (alongside other directories and files) and place your code inside that directory.
 
-Step 2: If you are not using SSL remove `HTTPS Section` in `./nginx/templates/default.conf.template`.
+You can use PHP versions from `7.0 to 8.2`. Please avoid from making changes to the docker-compose and Dockerfile files for managing versions and ports and containers name. `To make changes, simply open the .env file and modify the settings there`.
 
-## Please don't edit `./nginx/conf.d/` files, apply your changes to `./nginx/templates/default.conf.template`
+Please be aware that if you change the `name of the php-fpm service`, you should also update the `NGINX_CONTAINER_PHP_UPSTREAM_NAME` variable in the .env file with the same name.
 
-Step 3: If you want to change the `version` of all services or `ports` or `path (root project)` and etc..., edit `./.env` file.
-
-Step 4: Run `docker compose up --build -d` OR `docker-compose up --build -d`.
+To run Docker, use the following command:
+`docker-compose up --build -d` OR `docker compose up --build -d`
