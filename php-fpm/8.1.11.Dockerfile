@@ -147,7 +147,7 @@ RUN apt-get clean && \
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 
-Remove HTTP_Proxy
+# Remove HTTP_Proxy
 ENV http_proxy=""
 ENV https_proxy=""
 

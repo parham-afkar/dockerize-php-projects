@@ -62,6 +62,9 @@ RUN pecl install timezonedb && docker-php-ext-enable timezonedb
 # Install OpenSSL
 RUN apt-get update && apt-get install -y openssl libssl-dev
 
+# Install Redis
+RUN pecl install redis && docker-php-ext-enable redis
+
 # Install MongoDB driver
 RUN pecl install mongodb && docker-php-ext-enable mongodb
 
