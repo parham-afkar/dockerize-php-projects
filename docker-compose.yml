@@ -1,4 +1,3 @@
-version: '3.5'
 networks:
   shared:
     name: shared
@@ -148,3 +147,42 @@ services:
       - ./.data/mongodb:/data/db
     networks:
         - shared
+
+# Queue Worker
+  queue:
+    build:
+      context: ./php-fpm
+      dockerfile: ${PHP_CONTAINER_VERSION}.Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - APP_USER=${APP_USER}
+    container_name: laravel_queue_worker
+    command: ["php", "artisan", "queue:work"]
+    volumes:
+      - ${APP_PATH}:/var/www/html
+      - ./php-fpm/php${PHP_CONTAINER_VERSION}.ini:/usr/local/etc/php/php.ini
+    depends_on:
+      - php-fpm
+    networks:
+      - shared
+
+# Scheduler
+  scheduler:
+    build:
+      context: ./php-fpm
+      dockerfile: ${PHP_CONTAINER_VERSION}.Dockerfile
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - APP_USER=${APP_USER}
+    container_name: laravel_scheduler
+    command: ["php", "artisan", "schedule:run"]
+    volumes:
+      - ${APP_PATH}:/var/www/html
+      - ./php-fpm/php${PHP_CONTAINER_VERSION}.ini:/usr/local/etc/php/php.ini
+    depends_on:
+      - php-fpm
+    networks:
+      - shared
+    entrypoint: ["sh", "-c", "while true; do php artisan schedule:run; sleep 60; done"]
