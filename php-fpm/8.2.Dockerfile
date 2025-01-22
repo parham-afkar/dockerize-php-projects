@@ -113,9 +113,6 @@ RUN apt-get clean && \
 ENV http_proxy=""
 ENV https_proxy=""
 
-# Configure Supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 USER ${APP_USER}
 
 # Expose port 9000 for FPM
@@ -124,5 +121,4 @@ EXPOSE 9000
 ENV http_proxy=""
 ENV https_proxy=""
 
-# Start Supervisor to manage FPM and other processes
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["php-fpm"]
