@@ -157,7 +157,8 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - APP_USER=${APP_USER}
-    container_name: laravel_queue_worker
+    container_name: ${PREFIX}_queue_worker
+    restart: always
     command: ["php", "artisan", "queue:work"]
     volumes:
       - ${APP_PATH}:/var/www/html
@@ -176,7 +177,8 @@ services:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
         - APP_USER=${APP_USER}
-    container_name: laravel_scheduler
+    container_name: ${PREFIX}_scheduler
+    restart: always
     command: ["php", "artisan", "schedule:run"]
     volumes:
       - ${APP_PATH}:/var/www/html
